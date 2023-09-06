@@ -1,13 +1,15 @@
-import React, { useState, useEffect } from 'react'
-import { List, Input, Button } from 'antd'
+import React, { useState, useEffect, useRef } from 'react'
+import { List, Input, Button, InputRef } from 'antd'
 import { Message } from './Chat.interface'
-import { ChatItem } from './ChatItem'
+import { ConversationItem } from './ConversationItem'
 
 const Chat: React.FC = () => {
   const [name, setName] = useState<string>('')
+  const [enteredChat, setEnteredChat] = useState(false)
   const [message, setMessage] = useState<string>('')
   const [messages, setMessages] = useState<Message[]>([])
   const pageSize = 25
+  const messageInput = useRef<InputRef>(null)
 
   useEffect(() => {
     const storedMessages = JSON.parse(localStorage.getItem('chatMessages') || '[]')
@@ -17,6 +19,14 @@ const Chat: React.FC = () => {
   useEffect(() => {
     localStorage.setItem('chatMessages', JSON.stringify(messages))
   }, [messages])
+
+  useEffect(() => {
+    if (enteredChat) {
+      messageInput.current?.focus({
+        cursor: 'end',
+      })
+    }
+  }, [enteredChat])
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setName(e.target.value)
@@ -42,40 +52,51 @@ const Chat: React.FC = () => {
     // TODO: Implement load more messages functionality
   }
 
-  const renderChatItem = (msg: Message) => {
-    return <ChatItem message={msg} />
+  const renderConversationItem = (msg: Message) => {
+    return <ConversationItem message={msg} />
   }
 
   return (
-    <div className="chat">
+    <div className="w-6/12 mx-2.5">
       <div className="chat-header">
-        <h1>Chat Room</h1>
+        <h1>Chat Room {name}</h1>
+        {!enteredChat ? (
+          <Input
+            placeholder="Your Name"
+            value={name}
+            onChange={handleNameChange}
+            onPressEnter={() => setEnteredChat(true)}
+          />
+        ) : null}
       </div>
-      <div className="chat-messages">
-        <List
-          itemLayout="horizontal"
-          dataSource={messages.slice(-pageSize)}
-          renderItem={renderChatItem}
-        />
-        {messages.length > pageSize && (
-          <Button onClick={handleLoadMore}>Load More</Button>
-        )}
-      </div>
-      <div className="chat-input">
-        <Input
-          placeholder="Your Name"
-          value={name}
-          onChange={handleNameChange}
-        />
-        <Input
-          placeholder="Message"
-          value={message}
-          onChange={handleMessageChange}
-        />
-        <Button type="primary" onClick={handleSendMessage}>
-          Send
-        </Button>
-      </div>
+      
+      {enteredChat ? (
+        <>
+          <div className="chat-messages">
+            <List
+              itemLayout="horizontal"
+              dataSource={messages.slice(-pageSize)}
+              renderItem={renderConversationItem}
+            />
+            {messages.length > pageSize && (
+              <Button className='bg-[#1677ff]' onClick={handleLoadMore}>Load More</Button>
+            )}
+          </div>
+          <div className="chat-input">
+            <Input
+              placeholder="Message"
+              value={message}
+              onChange={handleMessageChange}
+              onPressEnter={handleSendMessage}
+              ref={messageInput}
+            />
+            <Button className='bg-[#1677ff] mt-2.5' type="primary" onClick={handleSendMessage}>
+              Send
+            </Button>
+          </div>
+        </>
+      ) : null}
+      
     </div>
   )
 }
