@@ -5,5 +5,6 @@ export type Message = {
 }
 
 export interface MessageProps {
-  message: Message
+  message: Message,
+  isGuess?: boolean
 }

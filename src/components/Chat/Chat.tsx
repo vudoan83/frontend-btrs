@@ -53,7 +53,7 @@ const Chat: React.FC = () => {
   }
 
   const renderConversationItem = (msg: Message) => {
-    return <ConversationItem message={msg} />
+    return <ConversationItem message={msg} isGuess={msg.name !== name}/>
   }
 
   return (
