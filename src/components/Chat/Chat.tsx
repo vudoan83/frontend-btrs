@@ -8,19 +8,21 @@ const Chat: React.FC = () => {
   const [enteredChat, setEnteredChat] = useState(false)
   const [message, setMessage] = useState<string>('')
   const [messages, setMessages] = useState<Message[]>([])
-  const pageSize = 25
+  const pageSize = 5
   const messageInput = useRef<InputRef>(null)
 
   useEffect(() => {
+    window.addEventListener('storage', () => {
+      const storedMessages = JSON.parse(localStorage.getItem('chatMessages') || '[]')
+      setMessages(storedMessages)
+    })
+    
     const storedMessages = JSON.parse(localStorage.getItem('chatMessages') || '[]')
     setMessages(storedMessages)
   }, [])
 
   useEffect(() => {
-    localStorage.setItem('chatMessages', JSON.stringify(messages))
-  }, [messages])
-
-  useEffect(() => {
+    // Set auto focus on message input when user enters chat
     if (enteredChat) {
       messageInput.current?.focus({
         cursor: 'end',
@@ -43,7 +45,8 @@ const Chat: React.FC = () => {
         message,
         timestamp: new Date().toLocaleTimeString(),
       }
-      setMessages([...messages, newMessage])
+      localStorage.setItem('chatMessages', JSON.stringify([...messages, newMessage]))
+      window.dispatchEvent(new Event("storage"))
       setMessage('')
     }
   }
