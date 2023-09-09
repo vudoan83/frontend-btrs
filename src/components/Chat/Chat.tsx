@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { List, Input, Button, InputRef } from 'antd'
 import { Message } from './Chat.interface'
 import { ConversationItem } from './ConversationItem'
@@ -8,18 +8,22 @@ const Chat: React.FC = () => {
   const [enteredChat, setEnteredChat] = useState(false)
   const [message, setMessage] = useState<string>('')
   const [messages, setMessages] = useState<Message[]>([])
+  const [pageCount, setPageCount] = useState<number>(1)
   const pageSize = 5
   const messageInput = useRef<InputRef>(null)
 
+  const updateMessagesState = useCallback(() => {
+    const storedMessages: Message[] = JSON.parse(localStorage.getItem('chatMessages') || '[]')
+    setMessages(storedMessages.sort(sortDescByTimestamp))
+  }, [])
+
+
   useEffect(() => {
     window.addEventListener('storage', () => {
-      const storedMessages = JSON.parse(localStorage.getItem('chatMessages') || '[]')
-      setMessages(storedMessages)
+      updateMessagesState()
     })
-    
-    const storedMessages = JSON.parse(localStorage.getItem('chatMessages') || '[]')
-    setMessages(storedMessages)
-  }, [])
+    updateMessagesState()
+  }, [updateMessagesState])
 
   useEffect(() => {
     // Set auto focus on message input when user enters chat
@@ -38,6 +42,10 @@ const Chat: React.FC = () => {
     setMessage(e.target.value)
   }
 
+  const sortDescByTimestamp = (a: Message, b: Message) => {
+    return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+  }
+
   const handleSendMessage = () => {
     if (name && message) {
       const newMessage: Message = {
@@ -52,11 +60,11 @@ const Chat: React.FC = () => {
   }
 
   const handleLoadMore = () => {
-    // TODO: Implement load more messages functionality
+    setPageCount((count) => count + 1)
   }
 
   const renderConversationItem = (msg: Message) => {
-    return <ConversationItem message={msg} isGuess={msg.name !== name}/>
+    return <ConversationItem message={msg} isGuess={msg.name !== name} />
   }
 
   return (
@@ -72,19 +80,20 @@ const Chat: React.FC = () => {
           />
         ) : null}
       </div>
-      
+
       {enteredChat ? (
         <>
-          <div className="chat-messages">
-            <List
-              itemLayout="horizontal"
-              dataSource={messages.slice(-pageSize)}
-              renderItem={renderConversationItem}
-            />
-            {messages.length > pageSize && (
-              <Button className='bg-[#1677ff]' onClick={handleLoadMore}>Load More</Button>
-            )}
-          </div>
+          <List
+            className="max-h-72 overflow-y-auto"
+            itemLayout="horizontal"
+            dataSource={messages.slice(-pageSize * pageCount)}
+            renderItem={renderConversationItem}
+          />
+          {messages.length > pageSize * pageCount && (
+            <div className="my-3 h-8 text-center">
+              <Button className='bg-[#1677ff] text-center text-white' onClick={handleLoadMore}>Load more</Button>
+            </div>
+          )}
           <div className="chat-input">
             <Input
               placeholder="Message"
@@ -99,7 +108,6 @@ const Chat: React.FC = () => {
           </div>
         </>
       ) : null}
-      
     </div>
   )
 }
