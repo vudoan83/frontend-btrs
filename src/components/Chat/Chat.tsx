@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { List, Input, Button, InputRef } from 'antd'
 import { Message } from './Chat.interface'
 import { ConversationItem } from './ConversationItem'
+import "./Chat.css"
 
 const Chat: React.FC = () => {
   const [name, setName] = useState<string>('')

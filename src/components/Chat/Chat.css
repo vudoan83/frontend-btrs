@@ -1,0 +1,5 @@
+@layer base {
+  .ant-list-item-meta .ant-list-item-meta-avatar {
+    @apply ml-4 mr-0;
+  }
+}
